@@ -29,7 +29,7 @@ labelsRouter.patch("/:id", async (req, res) => {
   const { id } = UpdateLabelParams.parse({ id: Number(req.params.id) });
   const body = UpdateLabelBody.parse(req.body);
   const [row] = await db.update(labelsTable).set(body).where(eq(labelsTable.id, id)).returning();
-  if (!row) return res.status(404).json({ error: "Label not found" });
+  if (!row) { res.status(404).json({ error: "Label not found" }); return; }
   res.json(serializeLabel(row));
 });
 
