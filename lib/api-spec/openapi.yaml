@@ -1,0 +1,985 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Yahavi Godrail — Social Media Management Platform API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: workspaces
+    description: Workspace management
+  - name: accounts
+    description: Connected social media accounts
+  - name: posts
+    description: Social media posts
+  - name: media
+    description: Media library
+  - name: labels
+    description: Post labels/tags
+  - name: analytics
+    description: Analytics and insights
+  - name: dashboard
+    description: Dashboard overview
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ── Workspaces ──────────────────────────────────────────────────────────────
+  /workspaces:
+    get:
+      operationId: listWorkspaces
+      tags: [workspaces]
+      summary: List all workspaces
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workspace"
+    post:
+      operationId: createWorkspace
+      tags: [workspaces]
+      summary: Create a workspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+
+  /workspaces/{id}:
+    get:
+      operationId: getWorkspace
+      tags: [workspaces]
+      summary: Get a workspace
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+    patch:
+      operationId: updateWorkspace
+      tags: [workspaces]
+      summary: Update a workspace
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+    delete:
+      operationId: deleteWorkspace
+      tags: [workspaces]
+      summary: Delete a workspace
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No Content
+
+  # ── Social Accounts ─────────────────────────────────────────────────────────
+  /accounts:
+    get:
+      operationId: listAccounts
+      tags: [accounts]
+      summary: List connected social accounts
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SocialAccount"
+    post:
+      operationId: createAccount
+      tags: [accounts]
+      summary: Connect a social account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SocialAccountInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialAccount"
+
+  /accounts/{id}:
+    get:
+      operationId: getAccount
+      tags: [accounts]
+      summary: Get a social account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialAccount"
+    delete:
+      operationId: deleteAccount
+      tags: [accounts]
+      summary: Disconnect a social account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No Content
+
+  /accounts/summary:
+    get:
+      operationId: getAccountsSummary
+      tags: [accounts]
+      summary: Per-account post and follower summary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountSummary"
+
+  # ── Posts ───────────────────────────────────────────────────────────────────
+  /posts:
+    get:
+      operationId: listPosts
+      tags: [posts]
+      summary: List posts
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, scheduled, published, failed]
+        - name: accountId
+          in: query
+          schema:
+            type: integer
+        - name: labelId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+    post:
+      operationId: createPost
+      tags: [posts]
+      summary: Create a post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/calendar:
+    get:
+      operationId: getPostsCalendar
+      tags: [posts]
+      summary: Posts grouped by date for calendar view
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: integer
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CalendarDay"
+
+  /posts/upcoming:
+    get:
+      operationId: getUpcomingPosts
+      tags: [posts]
+      summary: Next scheduled posts
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+
+  /posts/{id}:
+    get:
+      operationId: getPost
+      tags: [posts]
+      summary: Get a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+    patch:
+      operationId: updatePost
+      tags: [posts]
+      summary: Update a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+    delete:
+      operationId: deletePost
+      tags: [posts]
+      summary: Delete a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No Content
+
+  /posts/{id}/publish:
+    post:
+      operationId: publishPost
+      tags: [posts]
+      summary: Publish a post immediately
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/{id}/duplicate:
+    post:
+      operationId: duplicatePost
+      tags: [posts]
+      summary: Duplicate a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  # ── Media Library ────────────────────────────────────────────────────────────
+  /media:
+    get:
+      operationId: listMedia
+      tags: [media]
+      summary: List media assets
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: integer
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [image, video, gif]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MediaAsset"
+    post:
+      operationId: createMedia
+      tags: [media]
+      summary: Add a media asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MediaAssetInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaAsset"
+
+  /media/{id}:
+    delete:
+      operationId: deleteMedia
+      tags: [media]
+      summary: Delete a media asset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No Content
+
+  # ── Labels ───────────────────────────────────────────────────────────────────
+  /labels:
+    get:
+      operationId: listLabels
+      tags: [labels]
+      summary: List labels
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Label"
+    post:
+      operationId: createLabel
+      tags: [labels]
+      summary: Create a label
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LabelInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Label"
+
+  /labels/{id}:
+    patch:
+      operationId: updateLabel
+      tags: [labels]
+      summary: Update a label
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LabelUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Label"
+    delete:
+      operationId: deleteLabel
+      tags: [labels]
+      summary: Delete a label
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No Content
+
+  # ── Analytics ────────────────────────────────────────────────────────────────
+  /analytics/summary:
+    get:
+      operationId: getAnalyticsSummary
+      tags: [analytics]
+      summary: Overall analytics summary
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: integer
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d]
+            default: 30d
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSummary"
+
+  /analytics/top-posts:
+    get:
+      operationId: getTopPosts
+      tags: [analytics]
+      summary: Best performing posts
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 5
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostWithAnalytics"
+
+  # ── Dashboard ────────────────────────────────────────────────────────────────
+  /dashboard/overview:
+    get:
+      operationId: getDashboardOverview
+      tags: [dashboard]
+      summary: Combined dashboard data — totals, upcoming posts, top accounts
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardOverview"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    # ── Workspace ──────────────────────────────────────────────────────────────
+    Workspace:
+      type: object
+      required: [id, name, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    WorkspaceInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+
+    WorkspaceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        avatarUrl:
+          type: string
+
+    # ── Social Account ─────────────────────────────────────────────────────────
+    SocialAccount:
+      type: object
+      required: [id, workspaceId, platform, username, displayName, createdAt]
+      properties:
+        id:
+          type: integer
+        workspaceId:
+          type: integer
+        platform:
+          type: string
+          enum: [twitter, facebook, instagram, linkedin, pinterest, tiktok, youtube]
+        username:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        followersCount:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+
+    SocialAccountInput:
+      type: object
+      required: [workspaceId, platform, username, displayName]
+      properties:
+        workspaceId:
+          type: integer
+        platform:
+          type: string
+          enum: [twitter, facebook, instagram, linkedin, pinterest, tiktok, youtube]
+        username:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+        followersCount:
+          type: integer
+
+    AccountSummary:
+      type: object
+      required: [accountId, platform, username, totalPosts, scheduledPosts, publishedPosts]
+      properties:
+        accountId:
+          type: integer
+        platform:
+          type: string
+        username:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        totalPosts:
+          type: integer
+        scheduledPosts:
+          type: integer
+        publishedPosts:
+          type: integer
+        followersCount:
+          type: integer
+
+    # ── Post ───────────────────────────────────────────────────────────────────
+    Post:
+      type: object
+      required: [id, workspaceId, content, status, createdAt]
+      properties:
+        id:
+          type: integer
+        workspaceId:
+          type: integer
+        accountIds:
+          type: array
+          items:
+            type: integer
+        content:
+          type: string
+        status:
+          type: string
+          enum: [draft, scheduled, published, failed]
+        scheduledAt:
+          type: ["string", "null"]
+        publishedAt:
+          type: ["string", "null"]
+        mediaUrls:
+          type: array
+          items:
+            type: string
+        labelIds:
+          type: array
+          items:
+            type: integer
+        likes:
+          type: integer
+        comments:
+          type: integer
+        shares:
+          type: integer
+        reach:
+          type: integer
+        createdAt:
+          type: string
+
+    PostInput:
+      type: object
+      required: [workspaceId, content]
+      properties:
+        workspaceId:
+          type: integer
+        accountIds:
+          type: array
+          items:
+            type: integer
+        content:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          enum: [draft, scheduled]
+        scheduledAt:
+          type: string
+        mediaUrls:
+          type: array
+          items:
+            type: string
+        labelIds:
+          type: array
+          items:
+            type: integer
+
+    PostUpdate:
+      type: object
+      properties:
+        accountIds:
+          type: array
+          items:
+            type: integer
+        content:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          enum: [draft, scheduled]
+        scheduledAt:
+          type: string
+        mediaUrls:
+          type: array
+          items:
+            type: string
+        labelIds:
+          type: array
+          items:
+            type: integer
+
+    CalendarDay:
+      type: object
+      required: [date, posts]
+      properties:
+        date:
+          type: string
+        posts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Post"
+
+    # ── Media Asset ────────────────────────────────────────────────────────────
+    MediaAsset:
+      type: object
+      required: [id, workspaceId, url, type, filename, createdAt]
+      properties:
+        id:
+          type: integer
+        workspaceId:
+          type: integer
+        url:
+          type: string
+        type:
+          type: string
+          enum: [image, video, gif]
+        filename:
+          type: string
+        fileSize:
+          type: ["integer", "null"]
+        mimeType:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    MediaAssetInput:
+      type: object
+      required: [workspaceId, url, type, filename]
+      properties:
+        workspaceId:
+          type: integer
+        url:
+          type: string
+        type:
+          type: string
+          enum: [image, video, gif]
+        filename:
+          type: string
+        fileSize:
+          type: integer
+        mimeType:
+          type: string
+
+    # ── Label ──────────────────────────────────────────────────────────────────
+    Label:
+      type: object
+      required: [id, workspaceId, name, color, createdAt]
+      properties:
+        id:
+          type: integer
+        workspaceId:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+        createdAt:
+          type: string
+
+    LabelInput:
+      type: object
+      required: [workspaceId, name, color]
+      properties:
+        workspaceId:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+        color:
+          type: string
+
+    LabelUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        color:
+          type: string
+
+    # ── Analytics ──────────────────────────────────────────────────────────────
+    AnalyticsSummary:
+      type: object
+      required: [totalPosts, scheduledPosts, publishedPosts, totalLikes, totalComments, totalShares, totalReach, postsOverTime]
+      properties:
+        totalPosts:
+          type: integer
+        scheduledPosts:
+          type: integer
+        publishedPosts:
+          type: integer
+        totalLikes:
+          type: integer
+        totalComments:
+          type: integer
+        totalShares:
+          type: integer
+        totalReach:
+          type: integer
+        postsOverTime:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimeSeriesPoint"
+
+    TimeSeriesPoint:
+      type: object
+      required: [date, count]
+      properties:
+        date:
+          type: string
+        count:
+          type: integer
+
+    PostWithAnalytics:
+      type: object
+      required: [id, content, platform, likes, comments, shares, reach, publishedAt]
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        platform:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        likes:
+          type: integer
+        comments:
+          type: integer
+        shares:
+          type: integer
+        reach:
+          type: integer
+        publishedAt:
+          type: string
+
+    # ── Dashboard ──────────────────────────────────────────────────────────────
+    DashboardOverview:
+      type: object
+      required: [totalPosts, scheduledPosts, publishedPosts, connectedAccounts, upcomingPosts, topAccounts]
+      properties:
+        totalPosts:
+          type: integer
+        scheduledPosts:
+          type: integer
+        publishedPosts:
+          type: integer
+        draftPosts:
+          type: integer
+        connectedAccounts:
+          type: integer
+        upcomingPosts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Post"
+        topAccounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountSummary"
