@@ -91,7 +91,7 @@ postsRouter.post("/", async (req, res) => {
 postsRouter.get("/:id", async (req, res) => {
   const { id } = GetPostParams.parse({ id: Number(req.params.id) });
   const [row] = await db.select().from(postsTable).where(eq(postsTable.id, id));
-  if (!row) return res.status(404).json({ error: "Post not found" });
+  if (!row) { res.status(404).json({ error: "Post not found" }); return; }
   res.json(serializePost(row));
 });
 
@@ -106,7 +106,7 @@ postsRouter.patch("/:id", async (req, res) => {
   if (body.mediaUrls !== undefined) values.mediaUrls = body.mediaUrls.join(",");
   if (body.labelIds !== undefined) values.labelIds = body.labelIds.join(",");
   const [row] = await db.update(postsTable).set(values).where(eq(postsTable.id, id)).returning();
-  if (!row) return res.status(404).json({ error: "Post not found" });
+  if (!row) { res.status(404).json({ error: "Post not found" }); return; }
   res.json(serializePost(row));
 });
 
@@ -122,14 +122,14 @@ postsRouter.post("/:id/publish", async (req, res) => {
     .set({ status: "published", publishedAt: new Date() })
     .where(eq(postsTable.id, id))
     .returning();
-  if (!row) return res.status(404).json({ error: "Post not found" });
+  if (!row) { res.status(404).json({ error: "Post not found" }); return; }
   res.json(serializePost(row));
 });
 
 postsRouter.post("/:id/duplicate", async (req, res) => {
   const { id } = DuplicatePostParams.parse({ id: Number(req.params.id) });
   const [original] = await db.select().from(postsTable).where(eq(postsTable.id, id));
-  if (!original) return res.status(404).json({ error: "Post not found" });
+  if (!original) { res.status(404).json({ error: "Post not found" }); return; }
   const [copy] = await db.insert(postsTable).values({
     workspaceId: original.workspaceId,
     content: original.content,
