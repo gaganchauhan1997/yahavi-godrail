@@ -26,7 +26,7 @@ workspacesRouter.post("/", async (req, res) => {
 workspacesRouter.get("/:id", async (req, res) => {
   const { id } = GetWorkspaceParams.parse({ id: Number(req.params.id) });
   const [row] = await db.select().from(workspacesTable).where(eq(workspacesTable.id, id));
-  if (!row) return res.status(404).json({ error: "Workspace not found" });
+  if (!row) { res.status(404).json({ error: "Workspace not found" }); return; }
   res.json(serializeWorkspace(row));
 });
 
@@ -34,7 +34,7 @@ workspacesRouter.patch("/:id", async (req, res) => {
   const { id } = UpdateWorkspaceParams.parse({ id: Number(req.params.id) });
   const body = UpdateWorkspaceBody.parse(req.body);
   const [row] = await db.update(workspacesTable).set(body).where(eq(workspacesTable.id, id)).returning();
-  if (!row) return res.status(404).json({ error: "Workspace not found" });
+  if (!row) { res.status(404).json({ error: "Workspace not found" }); return; }
   res.json(serializeWorkspace(row));
 });
 
