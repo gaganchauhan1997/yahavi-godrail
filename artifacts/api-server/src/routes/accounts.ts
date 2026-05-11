@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { socialAccountsTable, postsTable } from "@workspace/db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
   CreateAccountBody,
   GetAccountParams,
@@ -51,7 +51,7 @@ accountsRouter.post("/", async (req, res) => {
 accountsRouter.get("/:id", async (req, res) => {
   const { id } = GetAccountParams.parse({ id: Number(req.params.id) });
   const [row] = await db.select().from(socialAccountsTable).where(eq(socialAccountsTable.id, id));
-  if (!row) return res.status(404).json({ error: "Account not found" });
+  if (!row) { res.status(404).json({ error: "Account not found" }); return; }
   res.json(serializeAccount(row));
 });
 
