@@ -12,6 +12,10 @@ export const socialAccountsTable = pgTable("social_accounts", {
   avatarUrl: text("avatar_url"),
   followersCount: integer("followers_count").default(0).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  tokenExpiresAt: timestamp("token_expires_at"),
+  platformUserId: text("platform_user_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
